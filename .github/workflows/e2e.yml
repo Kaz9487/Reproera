@@ -35,7 +35,7 @@ jobs:
               sed -i "s/^#.*baseurl=http/baseurl=http/g" /etc/yum.repos.d/CentOS-*.repo
               sed -i "s/^mirrorlist=http/#mirrorlist=http/g" /etc/yum.repos.d/CentOS-*.repo
               yum -y install \
-                ca-certificates curl findutils gcc make perl pkgconfig \
+                ca-certificates curl findutils gcc make perl perl-IPC-Cmd pkgconfig \
                 tar gzip xz which util-linux
               useradd --create-home --shell /bin/bash builder
               runuser -u builder -- env \
