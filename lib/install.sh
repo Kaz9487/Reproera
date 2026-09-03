@@ -67,9 +67,10 @@ reproera_run_recipe() {
             (cd "$source_dir" && CPPFLAGS="-I$prefix/include ${CPPFLAGS:-}" \
                 LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib ${LDFLAGS:-}" \
                 ./Configure --prefix="$prefix" --openssldir="$prefix/ssl" \
+                --libdir=lib \
                 shared zlib --with-zlib-include="$prefix/include" \
                 --with-zlib-lib="$prefix/lib" && \
-                make -j"$jobs" && make install_sw)
+                make -j"$jobs" build_sw && make install_sw)
             ;;
         ncurses)
             (cd "$source_dir" && ./configure --prefix="$prefix" --with-shared \
