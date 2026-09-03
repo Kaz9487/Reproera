@@ -98,6 +98,7 @@ reproera_verify_archive() {
     local actual
     actual="$(reproera_sha256 "$archive")"
     if [[ "$actual" != "$expected" ]]; then
+        rm -f "$archive"
         reproera_die "checksum mismatch for $(basename "$archive"): expected $expected, got $actual"
     fi
 }

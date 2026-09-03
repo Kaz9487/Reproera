@@ -126,6 +126,22 @@ test_archive_safety() {
     rm -rf "$temporary"
 }
 
+test_checksum_mismatch() {
+    source "$TEST_ROOT/lib/common.sh"
+    local temporary archive status
+    temporary="$(mktemp -d)"
+    archive="$temporary/corrupt.tar.gz"
+    printf 'not an archive\n' >"$archive"
+    set +e
+    (reproera_verify_archive "$archive" "0000000000000000000000000000000000000000000000000000000000000000") \
+        >/dev/null 2>&1
+    status=$?
+    set -e
+    if [[ "$status" -ne 0 ]]; then pass "checksum mismatch is rejected"; else fail "checksum mismatch is rejected"; fi
+    if [[ ! -e "$archive" ]]; then pass "corrupt cached archive is removed"; else fail "corrupt cached archive is removed"; fi
+    rm -rf "$temporary"
+}
+
 test_unsupported_version() {
     local output status
     set +e
@@ -149,6 +165,7 @@ main() {
     test_version_comparison
     test_shell_init_apply
     test_archive_safety
+    test_checksum_mismatch
     test_unsupported_version
     printf '1..%d\n' "$TESTS_RUN"
     if [[ "$TESTS_FAILED" -ne 0 ]]; then

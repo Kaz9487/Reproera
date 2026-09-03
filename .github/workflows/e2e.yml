@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - ".github/workflows/e2e.yml"
+      - "bin/**"
+      - "lib/**"
       - "tests/e2e.sh"
   schedule:
     # Sunday 02:00 in Taiwan (Saturday 18:00 UTC).

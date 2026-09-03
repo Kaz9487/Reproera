@@ -40,7 +40,7 @@ reproera_recipe_url() {
     local package="$1"
     local version="$2"
     case "${package}@${version}" in
-        zlib@1.3.1) printf 'https://zlib.net/fossils/zlib-1.3.1.tar.gz\n' ;;
+        zlib@1.3.1) printf 'https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz\n' ;;
         openssl@3.5.8) printf 'https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz\n' ;;
         ncurses@6.5) printf 'https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.5.tar.gz\n' ;;
         libevent@2.1.13-stable) printf 'https://github.com/libevent/libevent/releases/download/release-2.1.13-stable/libevent-2.1.13-stable.tar.gz\n' ;;

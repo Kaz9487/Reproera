@@ -101,9 +101,9 @@ idempotent:
 bash tests/e2e.sh
 ```
 
-It runs weekly, whenever its own test definition changes, and can also be
-started manually with the **End-to-end source build** workflow. Expect it to
-take substantially longer than the offline test suite.
+It runs weekly, whenever installer or end-to-end test code changes, and can
+also be started manually with the **End-to-end source build** workflow. Expect
+it to take substantially longer than the offline test suite.
 
 ## Known limitations
 
