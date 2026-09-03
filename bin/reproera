@@ -41,7 +41,7 @@ reproera_cmd_list() {
     printf '%-12s %-16s %s\n' "PACKAGE" "DEFAULT VERSION" "STATUS"
     printf '%-12s %-16s %s\n' "-------" "---------------" "------"
     local package
-    for package in zlib openssl ncurses libevent python tmux gcc; do
+    for package in zlib bzip2 xz libffi sqlite openssl ncurses readline libevent python tmux gcc; do
         printf '%-12s %-16s %s\n' \
             "$package" "$(reproera_default_version "$package")" \
             "$(reproera_package_status "$package")"

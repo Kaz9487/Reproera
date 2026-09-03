@@ -63,6 +63,25 @@ reproera_run_recipe() {
         zlib)
             (cd "$source_dir" && ./configure --prefix="$prefix" && make -j"$jobs" && make install)
             ;;
+        bzip2)
+            (cd "$source_dir" && make -j"$jobs" \
+                CFLAGS="-fPIC -Wall -Winline -O2 -g -D_FILE_OFFSET_BITS=64" && \
+                make install PREFIX="$prefix")
+            ;;
+        xz)
+            (cd "$source_dir" && ./configure --prefix="$prefix" --libdir="$prefix/lib" && \
+                make -j"$jobs" && make install)
+            ;;
+        libffi)
+            (cd "$source_dir" && ./configure --prefix="$prefix" \
+                --libdir="$prefix/lib" --includedir="$prefix/include" && \
+                make -j"$jobs" && make install)
+            ;;
+        sqlite)
+            (cd "$source_dir" && ./configure --prefix="$prefix" \
+                --disable-static --disable-readline && \
+                make -j"$jobs" && make install)
+            ;;
         openssl)
             (cd "$source_dir" && CPPFLAGS="-I$prefix/include ${CPPFLAGS:-}" \
                 LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib ${LDFLAGS:-}" \
@@ -81,6 +100,13 @@ reproera_run_recipe() {
                 --with-pkg-config-libdir="$prefix/lib/pkgconfig" && \
                 make -j"$jobs" && make install)
             ;;
+        readline)
+            (cd "$source_dir" && CPPFLAGS="-I$prefix/include -I$prefix/include/ncursesw ${CPPFLAGS:-}" \
+                LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib ${LDFLAGS:-}" \
+                ./configure --prefix="$prefix" --libdir="$prefix/lib" --with-curses && \
+                make -j"$jobs" SHLIB_LIBS="-L$prefix/lib -Wl,-rpath,$prefix/lib -lncursesw" && \
+                make install)
+            ;;
         libevent)
             (cd "$source_dir" && PKG_CONFIG_PATH="$prefix/lib/pkgconfig:${PKG_CONFIG_PATH:-}" \
                 CPPFLAGS="-I$prefix/include ${CPPFLAGS:-}" \
@@ -89,7 +115,7 @@ reproera_run_recipe() {
                 make -j"$jobs" && make install)
             ;;
         python)
-            (cd "$source_dir" && CPPFLAGS="-I$prefix/include ${CPPFLAGS:-}" \
+            (cd "$source_dir" && CPPFLAGS="-I$prefix/include -I$prefix/include/ncursesw ${CPPFLAGS:-}" \
                 LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib ${LDFLAGS:-}" \
                 PKG_CONFIG_PATH="$prefix/lib/pkgconfig:${PKG_CONFIG_PATH:-}" \
                 ./configure --prefix="$prefix" --with-openssl="$prefix" \
@@ -112,18 +138,37 @@ reproera_verify_install() {
         zlib)
             [[ -f "$prefix/include/zlib.h" ]] || reproera_die "zlib verification failed"
             ;;
+        bzip2)
+            [[ -f "$prefix/include/bzlib.h" && -f "$prefix/lib/libbz2.a" ]] \
+                || reproera_die "bzip2 verification failed"
+            ;;
+        xz)
+            [[ -f "$prefix/include/lzma.h" && -f "$prefix/lib/liblzma.so" ]] \
+                || reproera_die "xz verification failed"
+            ;;
+        libffi)
+            [[ -f "$prefix/include/ffi.h" && -f "$prefix/lib/libffi.so" ]] \
+                || reproera_die "libffi verification failed"
+            ;;
+        sqlite)
+            "$prefix/bin/sqlite3" -version >/dev/null || reproera_die "SQLite verification failed"
+            ;;
         openssl)
             "$prefix/bin/openssl" version >/dev/null || reproera_die "OpenSSL verification failed"
             ;;
         ncurses)
             [[ -f "$prefix/include/ncursesw/ncurses.h" ]] || reproera_die "ncurses verification failed"
             ;;
+        readline)
+            [[ -f "$prefix/include/readline/readline.h" && -f "$prefix/lib/libreadline.so" ]] \
+                || reproera_die "readline verification failed"
+            ;;
         libevent)
             [[ -f "$prefix/include/event2/event.h" ]] || reproera_die "libevent verification failed"
             ;;
         python)
-            "$prefix/bin/python3.11" -c 'import ssl, zlib' \
-                || reproera_die "Python verification failed: ssl or zlib module unavailable"
+            "$prefix/bin/python3.11" -c 'import bz2, ctypes, curses, lzma, readline, sqlite3, ssl, zlib' \
+                || reproera_die "Python verification failed: a required native module is unavailable"
             ;;
         tmux)
             "$prefix/bin/tmux" -V >/dev/null || reproera_die "tmux verification failed"

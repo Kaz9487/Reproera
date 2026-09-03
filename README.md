@@ -23,7 +23,7 @@ turns that process into an inspectable build plan with pinned sources.
   and prefix permissions.
 - Detect GCC and Clang, including old GCC versions.
 - Resolve and display dependency-aware build plans.
-- Build pinned zlib, OpenSSL LTS, ncurses, libevent, Python, and tmux sources.
+- Build pinned Python and tmux stacks, including their native dependencies.
 - Emit environment setup for Bash, Zsh, and tcsh.
 - Refuse unknown versions and fail on checksum mismatches.
 - Test compiler detection against GCC 4.8.5 through 13.3.0 fixtures.
@@ -73,8 +73,13 @@ reproera shell-init [bash|zsh|tcsh] [--apply]
 | Package | Pinned version | Notes |
 | --- | ---: | --- |
 | zlib | 1.3.1 | Python dependency |
+| bzip2 | 1.0.8 | Enables Python `bz2` |
+| xz | 5.8.3 | Enables Python `lzma` |
+| libffi | 3.8.0 | Enables Python `ctypes` |
+| SQLite | 3.53.4 | Enables Python `sqlite3` |
 | OpenSSL | 3.5.8 LTS | Python dependency |
-| ncurses | 6.5 | tmux dependency |
+| ncurses | 6.5 | Enables Python `curses`; tmux dependency |
+| readline | 8.3 | Enables Python `readline` |
 | libevent | 2.1.13-stable | Built without OpenSSL |
 | Python | 3.11.16 | Uses `altinstall`; 3.11.9 also available explicitly |
 | tmux | 3.6b | Links to the user prefix; 3.3a also available explicitly |
@@ -109,8 +114,8 @@ it to take substantially longer than the offline test suite.
 
 - The scheduled CentOS 7 end-to-end source build is intentionally separate
   from the fast pull-request test suite.
-- Python may omit optional modules whose development libraries are unavailable,
-  such as `_bz2`, `_lzma`, `_sqlite3`, `_ctypes`, or `readline`.
+- Tkinter and UUID integration remain dependent on libraries supplied by the
+  host and may be omitted from Python.
 - Build resume, uninstall, binary caches, ARM64, proxies, and offline source
   bundles are not implemented.
 - The installation marker records recipe completion but is not yet a full

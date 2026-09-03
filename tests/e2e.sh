@@ -46,8 +46,14 @@ tmux_bin="$(command -v tmux)"
 
 REPROERA_EXPECTED_PREFIX="$REPROERA_PREFIX" "$python_bin" - <<'PY'
 import _ssl
+import bz2
+import ctypes
+import curses
 import hashlib
+import lzma
 import os
+import readline
+import sqlite3
 import ssl
 import sys
 import zlib
@@ -56,19 +62,38 @@ prefix = os.environ["REPROERA_EXPECTED_PREFIX"]
 assert sys.prefix == prefix, (sys.prefix, prefix)
 assert ssl.OPENSSL_VERSION.startswith("OpenSSL 3.5.8"), ssl.OPENSSL_VERSION
 assert zlib.ZLIB_VERSION == "1.3.1", zlib.ZLIB_VERSION
+assert sqlite3.sqlite_version == "3.53.4", sqlite3.sqlite_version
+assert bz2.decompress(bz2.compress(b"reproera")) == b"reproera"
+assert lzma.decompress(lzma.compress(b"reproera")) == b"reproera"
+assert ctypes.sizeof(ctypes.c_void_p) > 0
+assert curses.version
 assert hashlib.sha256(b"reproera").hexdigest() == (
     "4b71150a4795e72e19df77acd5d34f0d949ae5df9aafc7e5b55243eb502fc3d1"
 )
 print("Python:", sys.version.split()[0])
 print("OpenSSL:", ssl.OPENSSL_VERSION)
 print("zlib:", zlib.ZLIB_VERSION)
+print("SQLite:", sqlite3.sqlite_version)
 print("_ssl:", _ssl.__file__)
 PY
 
-ssl_module="$($python_bin -c 'import _ssl; print(_ssl.__file__)')"
-ssl_links="$(ldd "$ssl_module")"
-printf '%s\n' "$ssl_links" | grep -E 'lib(ssl|crypto)' >/dev/null
-printf '%s\n' "$ssl_links" | grep -F "$REPROERA_PREFIX/" >/dev/null
+assert_module_link() {
+    local module="$1" library_pattern="$2" module_file module_links
+    module_file="$($python_bin -c "import $module; print($module.__file__)")"
+    module_links="$(ldd "$module_file")"
+    printf '%s\n' "$module_links" | grep -E "$library_pattern" | grep -F "$REPROERA_PREFIX/" >/dev/null
+}
+
+assert_module_link _ssl 'lib(ssl|crypto)'
+assert_module_link _ctypes 'libffi'
+assert_module_link _curses 'lib(ncurses|tinfo)'
+assert_module_link _lzma 'liblzma'
+assert_module_link _sqlite3 'libsqlite3'
+assert_module_link readline 'libreadline'
+
+# CPython links its bz2 extension to Reproera's PIC static archive, so a
+# successful build and round-trip above prove it did not use a system -devel
+# package (none is installed in the CentOS 7 image).
 
 tmux_links="$(ldd "$tmux_bin")"
 printf '%s\n' "$tmux_links" | grep -E 'libevent' | grep -F "$REPROERA_PREFIX/" >/dev/null

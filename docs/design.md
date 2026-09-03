@@ -23,7 +23,8 @@ CentOS 7/GCC 4.8 environment when GitHub Actions is enabled.
 
 The separate end-to-end workflow runs the installer as a non-root CentOS 7
 user. It compiles every declared Python and tmux dependency, checks runtime
-linkage back to the private prefix, exercises Python's SSL and zlib modules,
+linkage back to the private prefix, exercises Python's SSL, compression,
+ctypes, curses, SQLite, and readline modules,
 starts a tmux server, and repeats both installations to verify marker-based
 idempotency. It is scheduled weekly rather than on every pull request because
 it downloads and rebuilds the complete graph.
@@ -38,14 +39,14 @@ absolute paths and parent-directory traversal before extraction.
 ## Build graph
 
 ```text
-python -> zlib, openssl 3.5 LTS
-tmux   -> ncurses, libevent
+python   -> zlib, bzip2, xz, libffi, SQLite, OpenSSL 3.5 LTS, readline
+readline -> ncurses
+tmux     -> ncurses, libevent
 ```
 
-The dependency graph is deliberately small for the alpha. Python 3.11.16 is
-the maintained source-only security release used by default; 3.11.9 remains an
-explicit compatibility recipe. Python extension
-modules that require additional libraries may be absent. GCC source bootstrap,
+Python 3.11.16 is the maintained source-only security release used by default;
+3.11.9 remains an explicit compatibility recipe. Tkinter and UUID integration
+still depend on host libraries. GCC source bootstrap,
 resume support, signed release verification, and a lockfile are future work.
 
 ## Filesystem layout

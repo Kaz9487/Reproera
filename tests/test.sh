@@ -26,7 +26,7 @@ test_version() {
 }
 
 test_plan() {
-    assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nopenssl@3.5.8\npython@3.11.16'
+    assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
     assert_equals "tmux dependency plan" "$($REPROERA plan tmux)" $'ncurses@6.5\nlibevent@2.1.13-stable\ntmux@3.6b'
 }
 
