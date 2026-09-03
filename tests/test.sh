@@ -55,16 +55,20 @@ test_project_self_install() {
     cp "$TEST_ROOT/bin/reproera" "$checkout/bin/reproera"
     cp "$TEST_ROOT"/lib/*.sh "$checkout/lib/"
 
-    output="$(HOME="$temporary/home" bash "$checkout/install.sh" --project)"
+    output="$(HOME="$temporary/home" SHELL=/bin/tcsh \
+        bash "$checkout/install.sh" --project)"
     assert_contains "project installer reports project root" "$output" "$project"
+    assert_contains "project installer detects tcsh" "$output" \
+        '[reproera installer] detected shell: tcsh'
     assert_contains "project installer reports activation command" \
-        "$output" "$project/.reproera/activate"
+        "$output" "activate with: source $project/.reproera/activate.tcsh"
     assert_contains "project installer creates tcsh activation" \
         "$(cat "$project/.reproera/activate.tcsh")" 'setenv PATH'
     assert_contains "project installer ignores its runtime directory" \
         "$(cat "$project/.reproera/.gitignore")" '!.gitignore'
     assert_contains "project installer is idempotent" \
-        "$(HOME="$temporary/home" bash "$checkout/install.sh" --project)" "$installed"
+        "$(HOME="$temporary/home" SHELL=/bin/tcsh \
+            bash "$checkout/install.sh" --project)" "$installed"
 
     rm -rf "$checkout"
     assert_contains "project-installed CLI works after checkout removal" \

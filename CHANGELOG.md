@@ -7,6 +7,8 @@
   the existing `reproera` command interface unchanged.
 - Extended the CentOS 7 source-build test through project-local bootstrap,
   activation, and source-checkout removal.
+- Made project installation detect tcsh/csh and print the matching activation
+  command first, preventing Bash activation syntax from being copied into tcsh.
 - Kept the original `~/.local` and explicit `--prefix PATH` installation modes
   for backward compatibility.
 

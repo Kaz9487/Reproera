@@ -46,12 +46,19 @@ cd /path/to/my-project
 git clone --depth 1 https://github.com/Kaz9487/Reproera.git
 ./Reproera/install.sh --project
 
+# Bash or Zsh (use the activation command printed by the installer):
 source .reproera/activate
 
 reproera doctor
 reproera init python@3.11.16 tmux@3.6b
 reproera plan
 reproera install --jobs 2
+```
+
+For tcsh or csh, replace the activation line above with:
+
+```tcsh
+source .reproera/activate.tcsh
 ```
 
 `--project` treats the Reproera checkout's parent as the project root. It copies

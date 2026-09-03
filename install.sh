@@ -101,7 +101,7 @@ if [[ "$INSTALL_PROJECT_MODE" -eq 1 ]]; then
     activation_tcsh="$INSTALL_PREFIX/activate.tcsh"
 
     {
-        printf '# Source this file from Bash or Zsh to activate this Reproera project.\n'
+        printf '# Bash/Zsh only. For tcsh/csh, source .reproera/activate.tcsh.\n'
         printf '_reproera_project_root=%q\n' "$INSTALL_PROJECT_ROOT"
         printf 'export REPROERA_PREFIX="$_reproera_project_root/.reproera/prefix"\n'
         printf 'export REPROERA_STATE_DIR="$_reproera_project_root/.reproera/state"\n'
@@ -144,8 +144,25 @@ fi
 printf '[reproera installer] installed %s\n' "$launcher"
 if [[ "$INSTALL_PROJECT_MODE" -eq 1 ]]; then
     printf '[reproera installer] project root: %s\n' "$INSTALL_PROJECT_ROOT"
-    printf '[reproera installer] activate with: source %s\n' "$INSTALL_PREFIX/activate"
-    printf '[reproera installer] tcsh/csh: source %s\n' "$INSTALL_PREFIX/activate.tcsh"
+    detected_shell="${SHELL:-}"
+    detected_shell="${detected_shell##*/}"
+    case "$detected_shell" in
+        tcsh|csh)
+            printf '[reproera installer] detected shell: %s\n' "$detected_shell"
+            printf '[reproera installer] activate with: source %s\n' \
+                "$INSTALL_PREFIX/activate.tcsh"
+            printf '[reproera installer] bash/zsh alternative: source %s\n' \
+                "$INSTALL_PREFIX/activate"
+            ;;
+        *)
+            [[ -n "$detected_shell" ]] || detected_shell="unknown"
+            printf '[reproera installer] detected shell: %s\n' "$detected_shell"
+            printf '[reproera installer] activate with: source %s\n' \
+                "$INSTALL_PREFIX/activate"
+            printf '[reproera installer] tcsh/csh alternative: source %s\n' \
+                "$INSTALL_PREFIX/activate.tcsh"
+            ;;
+    esac
     exit 0
 fi
 case ":${PATH}:" in
