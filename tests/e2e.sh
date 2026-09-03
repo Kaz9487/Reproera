@@ -31,8 +31,8 @@ printf '  workspace: %s\n' "$E2E_WORK_ROOT"
 printf '  prefix:    %s\n' "$REPROERA_PREFIX"
 
 "$REPROERA" doctor
-"$REPROERA" install python --jobs "$E2E_JOBS"
 "$REPROERA" install tmux --jobs "$E2E_JOBS"
+"$REPROERA" install python --jobs "$E2E_JOBS"
 
 # The generated environment must make the installed programs discoverable and
 # provide runtime paths for libraries built inside the private prefix.
