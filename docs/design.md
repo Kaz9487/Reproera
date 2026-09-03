@@ -13,7 +13,7 @@ package manager.
 - A working C compiler, `make`, `tar`, `awk`, `sed`, and `sort`
 - `curl` or `wget`
 - `sha256sum` or `shasum`
-- Perl with `IPC::Cmd` when building OpenSSL
+- Perl with `IPC::Cmd` and `Time::Piece` when building OpenSSL
 
 The initial compiler test matrix models GCC 4.8.5, 7.5.0, 11.5.0, and 13.3.0.
 The wrappers exercise detection and version-dependent behavior; they do not

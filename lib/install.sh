@@ -138,8 +138,8 @@ reproera_check_plan_requirements() {
             fi
         done
         if [[ "$package" == "openssl" ]] && reproera_command_exists perl \
-            && ! perl -MIPC::Cmd -e 1 >/dev/null 2>&1; then
-            reproera_warn "openssl requires the Perl IPC::Cmd module"
+            && ! perl -MIPC::Cmd -MTime::Piece -e 1 >/dev/null 2>&1; then
+            reproera_warn "openssl requires the Perl IPC::Cmd and Time::Piece modules"
             missing=1
         fi
     done < <(reproera_plan "$spec")
