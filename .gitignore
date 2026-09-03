@@ -1,4 +1,7 @@
-.envsmith/
+.reproera/
+.env
+.env.*
+!.env.example
 *.part
 *.tar.gz
 *.tar.xz

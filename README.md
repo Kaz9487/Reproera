@@ -1,5 +1,9 @@
 # Reproera
 
+[![CI](https://github.com/Kaz9487/Reproera/actions/workflows/ci.yml/badge.svg)](https://github.com/Kaz9487/Reproera/actions/workflows/ci.yml)
+[![End-to-end source build](https://github.com/Kaz9487/Reproera/actions/workflows/e2e.yml/badge.svg)](https://github.com/Kaz9487/Reproera/actions/workflows/e2e.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Reproera builds selected developer tools into a user-owned Linux prefix without
 `sudo`. It targets constrained university and laboratory servers where the base
 OS, compiler, and system packages may be old.
@@ -157,6 +161,10 @@ Reproera never invokes `sudo` and does not pipe remote content into a shell.
 Source archives are checked against pinned SHA-256 digests before extraction,
 and unsafe absolute or parent-traversing archive paths are rejected.
 Review recipes before use, especially on shared systems.
+
+Please follow [SECURITY.md](SECURITY.md) when reporting a vulnerability. Never
+include credentials, private hostnames, or private filesystem paths in a public
+issue.
 
 ## License
 

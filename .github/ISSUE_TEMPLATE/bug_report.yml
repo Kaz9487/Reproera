@@ -1,0 +1,61 @@
+name: Bug report
+description: Report reproducible incorrect behavior in Reproera
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Reproera. Remove credentials, private hostnames, usernames, and private paths before submitting logs.
+  - type: input
+    id: version
+    attributes:
+      label: Reproera version
+      description: Output of `reproera --version`, or the commit SHA.
+      placeholder: 0.1.0-alpha.1
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, architecture, login shell, Bash version, compiler, and whether sudo is unavailable.
+      placeholder: CentOS 7, x86_64, tcsh login shell, Bash 4.2, GCC 4.8.5, no sudo
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest sequence of commands that reproduces the problem.
+      placeholder: |
+        1. `reproera init`
+        2. `reproera install --jobs 2`
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and logs
+      description: Include the relevant output. Redact private information first.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed credentials and private machine information from this report.
+          required: true
+        - label: This is not a security vulnerability. Security reports must use GitHub private vulnerability reporting.
+          required: true
