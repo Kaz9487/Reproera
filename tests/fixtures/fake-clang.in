@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+case "${1:-}" in
+    --version)
+        printf 'clang version @VERSION@\n'
+        ;;
+    -dumpfullversion|-dumpversion)
+        printf '@VERSION@\n'
+        ;;
+    *)
+        exec "${REPROERA_TEST_REAL_CC:-cc}" "$@"
+        ;;
+esac

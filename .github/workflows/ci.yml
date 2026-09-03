@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  bash-tests:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04 / Bash 5
+            container: ubuntu:24.04
+          - name: Rocky 8 / Bash 4
+            container: rockylinux:8
+          - name: CentOS 7 / Bash 4.2
+            container: quay.io/centos/centos:7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run offline-compatible tests
+        shell: bash
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/work:ro"
+          -w /work
+          "${{ matrix.container }}"
+          bash tests/test.sh
+
+  centos7-real-gcc:
+    name: CentOS 7 / real GCC 4.8.5
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run with CentOS 7 default compiler
+        shell: bash
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work:ro" \
+            -w /work \
+            quay.io/centos/centos:7 \
+            bash -lc '
+              sed -i "s/mirror.centos.org/vault.centos.org/g" /etc/yum.repos.d/CentOS-*.repo
+              sed -i "s/^#.*baseurl=http/baseurl=http/g" /etc/yum.repos.d/CentOS-*.repo
+              sed -i "s/^mirrorlist=http/#mirrorlist=http/g" /etc/yum.repos.d/CentOS-*.repo
+              yum -y install gcc make curl tar gzip xz which
+              CC=gcc bash tests/test.sh
+              test "$(gcc -dumpversion)" = "4.8.5"
+            '
+
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: .

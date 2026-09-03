@@ -1,0 +1,6 @@
+.envsmith/
+*.part
+*.tar.gz
+*.tar.xz
+build/
+dist/
