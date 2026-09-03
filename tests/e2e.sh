@@ -4,7 +4,6 @@ set -euo pipefail
 
 E2E_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 E2E_ROOT="$(cd "${E2E_SCRIPT_DIR}/.." && pwd)"
-REPROERA="${E2E_ROOT}/bin/reproera"
 
 if [[ "${EUID}" -eq 0 ]]; then
     printf 'error: the end-to-end build must run as an unprivileged user\n' >&2
@@ -23,7 +22,16 @@ export SHELL="/bin/bash"
 E2E_JOBS="${REPROERA_E2E_JOBS:-2}"
 E2E_PROJECT_ROOT="${E2E_WORK_ROOT}/project"
 E2E_PREFIX="${E2E_PROJECT_ROOT}/.reproera/prefix"
-mkdir -p "$E2E_PROJECT_ROOT"
+E2E_CHECKOUT="${E2E_PROJECT_ROOT}/Reproera"
+mkdir -p "$E2E_CHECKOUT/bin" "$E2E_CHECKOUT/lib"
+cp "$E2E_ROOT/install.sh" "$E2E_CHECKOUT/install.sh"
+cp "$E2E_ROOT/bin/reproera" "$E2E_CHECKOUT/bin/reproera"
+cp "$E2E_ROOT"/lib/*.sh "$E2E_CHECKOUT/lib/"
+
+bash "$E2E_CHECKOUT/install.sh" --project
+rm -rf "$E2E_CHECKOUT"
+source "$E2E_PROJECT_ROOT/.reproera/activate"
+REPROERA="$(command -v reproera)"
 cd "$E2E_PROJECT_ROOT"
 
 printf 'Reproera end-to-end source build\n'
@@ -31,15 +39,16 @@ printf '  user:      %s (uid %s)\n' "$(id -un)" "$(id -u)"
 printf '  compiler:  %s\n' "${CC:-cc}"
 printf '  workspace: %s\n' "$E2E_WORK_ROOT"
 printf '  project:   %s\n' "$E2E_PROJECT_ROOT"
+printf '  cli:       %s\n' "$REPROERA"
 printf '  prefix:    %s\n' "$E2E_PREFIX"
 
 "$REPROERA" init tmux python
 "$REPROERA" doctor
 "$REPROERA" install --jobs "$E2E_JOBS"
 
-# The generated environment must make the installed programs discoverable and
-# provide runtime paths for libraries built inside the private prefix.
-eval "$("$REPROERA" env bash)"
+# The project activation must make installed programs discoverable and provide
+# runtime paths for libraries built inside the private prefix.
+source "$E2E_PROJECT_ROOT/.reproera/activate"
 hash -r
 
 python_bin="$(command -v python3.11)"

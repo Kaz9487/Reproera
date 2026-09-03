@@ -5,6 +5,8 @@
 - Added project-local CLI installation with `install.sh --project`.
 - Added generated activation files for Bash, Zsh, tcsh, and csh while keeping
   the existing `reproera` command interface unchanged.
+- Extended the CentOS 7 source-build test through project-local bootstrap,
+  activation, and source-checkout removal.
 - Kept the original `~/.local` and explicit `--prefix PATH` installation modes
   for backward compatibility.
 

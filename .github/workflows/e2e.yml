@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - ".github/workflows/e2e.yml"
+      - "install.sh"
       - "bin/**"
       - "lib/**"
       - "tests/e2e.sh"
