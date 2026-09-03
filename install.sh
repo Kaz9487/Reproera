@@ -123,6 +123,7 @@ if [[ "$INSTALL_PROJECT_MODE" -eq 1 ]]; then
         printf 'setenv REPROERA_PREFIX "${REPROERA_PROJECT_ROOT}/.reproera/prefix"\n'
         printf 'setenv REPROERA_STATE_DIR "${REPROERA_PROJECT_ROOT}/.reproera/state"\n'
         printf 'setenv PATH "${REPROERA_PROJECT_ROOT}/.reproera/bin:${REPROERA_PROJECT_ROOT}/.reproera/prefix/bin:${PATH}"\n'
+        printf 'rehash\n'
         printf 'if ( $?PKG_CONFIG_PATH ) then\n'
         printf '  setenv PKG_CONFIG_PATH "${REPROERA_PROJECT_ROOT}/.reproera/prefix/lib/pkgconfig:${REPROERA_PROJECT_ROOT}/.reproera/prefix/lib64/pkgconfig:${PKG_CONFIG_PATH}"\n'
         printf 'else\n'

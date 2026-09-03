@@ -93,6 +93,13 @@ reproera_build_one() {
     printf 'prefix=%s\ninstalled_at=%s\n' "$prefix" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >"$marker"
 }
 
+reproera_install_marker() {
+    local package="$1" version="$2" prefix="$3" prefix_id
+    prefix_id="$(reproera_string_sha256 "$prefix")"
+    printf '%s/installed/%s/%s-%s\n' \
+        "$(reproera_state_dir)" "$prefix_id" "$package" "$version"
+}
+
 reproera_run_recipe() {
     local package="$1" source_dir="$2" prefix="$3" jobs="$4"
     case "$package" in
@@ -223,6 +230,107 @@ reproera_verify_install() {
     esac
 }
 
+reproera_print_activation_guidance() {
+    local prefix="$1" project_root shell_name
+    shell_name="${SHELL:-bash}"
+    shell_name="${shell_name##*/}"
+    if project_root="$(reproera_find_project_root)" && \
+        [[ "$prefix" == "$project_root/.reproera/prefix" ]]; then
+        case "$shell_name" in
+            tcsh|csh)
+                printf '  Activate:     source %s/.reproera/activate.tcsh\n' "$project_root"
+                ;;
+            *)
+                printf '  Activate:     source %s/.reproera/activate\n' "$project_root"
+                ;;
+        esac
+    else
+        case "$shell_name" in
+            tcsh|csh)
+                printf '  Activate:     reproera shell-init tcsh --apply, then start a new shell\n'
+                ;;
+            *)
+                printf '  Activate:     eval "$(reproera env %s)"\n' \
+                    "${shell_name:-bash}"
+                ;;
+        esac
+    fi
+}
+
+reproera_environment_active() {
+    local prefix="$1"
+    case ":${PATH}:" in
+        *:"$prefix/bin":*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+reproera_print_install_summary() {
+    local prefix="$1" plan_text="$2" package_count
+    package_count="$(printf '%s\n' "$plan_text" | awk 'NF { count++ } END { print count + 0 }')"
+    printf '\nReproera installation complete\n'
+    printf '  Prefix:       %s\n' "$prefix"
+    printf '  Verification: passed (%s/%s packages)\n' "$package_count" "$package_count"
+    if reproera_environment_active "$prefix"; then
+        printf '  Environment:  active in this shell\n'
+    else
+        printf '  Environment:  NOT ACTIVE in this shell\n'
+        reproera_print_activation_guidance "$prefix"
+    fi
+    printf '  Confirm with: reproera verify\n'
+}
+
+reproera_verify() {
+    [[ "$#" -le 1 ]] || reproera_die "usage: reproera verify [PACKAGE[@VERSION]]"
+
+    local prefix canonical_prefix plan_text plan_line package version marker
+    local checked=0 failed=0
+    prefix="$(reproera_default_prefix)"
+    if [[ ! -d "$prefix" ]]; then
+        reproera_die "installation prefix does not exist: $prefix"
+    fi
+    canonical_prefix="$(cd "$prefix" && pwd -P)"
+    if [[ "$#" -eq 1 ]]; then
+        plan_text="$(reproera_plan "$1")"
+    else
+        plan_text="$(reproera_plan)"
+    fi
+
+    printf 'Reproera verification\n'
+    printf '  Prefix: %s\n' "$canonical_prefix"
+    while IFS= read -r plan_line; do
+        [[ -n "$plan_line" ]] || continue
+        package="${plan_line%%@*}"
+        version="${plan_line#*@}"
+        marker="$(reproera_install_marker "$package" "$version" "$canonical_prefix")"
+        checked=$((checked + 1))
+        if [[ ! -f "$marker" ]]; then
+            printf '  [missing] %s\n' "$plan_line"
+            failed=$((failed + 1))
+        elif (reproera_verify_install "$package" "$canonical_prefix") >/dev/null 2>&1; then
+            printf '  [ok]      %s\n' "$plan_line"
+        else
+            printf '  [failed]  %s\n' "$plan_line"
+            failed=$((failed + 1))
+        fi
+    done <<<"$plan_text"
+
+    if reproera_environment_active "$canonical_prefix"; then
+        printf '  [ok]      shell uses %s/bin\n' "$canonical_prefix"
+    else
+        printf '  [inactive] current shell does not use %s/bin\n' "$canonical_prefix"
+        reproera_print_activation_guidance "$canonical_prefix"
+        failed=$((failed + 1))
+    fi
+
+    if [[ "$failed" -eq 0 ]]; then
+        printf 'Verified: %s/%s packages; environment active.\n' "$checked" "$checked"
+        return 0
+    fi
+    printf 'Verification needs attention: %s issue(s).\n' "$failed" >&2
+    return 1
+}
+
 reproera_check_plan_requirements() {
     local spec="$1" plan_line package command missing=0
     while IFS= read -r plan_line; do
@@ -239,12 +347,19 @@ reproera_check_plan_requirements() {
 
 reproera_install() {
     if [[ "$#" -eq 0 || "${1:-}" == -* ]]; then
-        local project_spec project_specs_text
+        local project_spec project_specs_text project_plan canonical_project_prefix
         local project_options=("$@")
         project_specs_text="$(reproera_project_specs)" || return 1
+        project_plan="$(reproera_plan)" || return 1
         while IFS= read -r project_spec; do
-            reproera_install "$project_spec" "${project_options[@]}"
+            REPROERA_INSTALL_SUMMARY=0 \
+                reproera_install "$project_spec" "${project_options[@]}"
         done <<<"$project_specs_text"
+        if [[ "${REPROERA_INSTALL_SUMMARY:-1}" -eq 1 && \
+            " ${project_options[*]} " != *' --dry-run '* ]]; then
+            canonical_project_prefix="$(reproera_realpath_dir "$(reproera_default_prefix)")"
+            reproera_print_install_summary "$canonical_project_prefix" "$project_plan"
+        fi
         return
     fi
 
@@ -285,7 +400,9 @@ reproera_install() {
             || reproera_die "build failed: $package@$version"
     done < <(reproera_plan "$spec")
 
-    reproera_info "installation complete; run 'reproera env ${SHELL##*/}'"
+    if [[ "${REPROERA_INSTALL_SUMMARY:-1}" -eq 1 ]]; then
+        reproera_print_install_summary "$canonical_prefix" "$(reproera_plan "$spec")"
+    fi
 }
 
 reproera_emit_environment() {
@@ -298,6 +415,7 @@ reproera_emit_environment() {
             ;;
         tcsh|csh)
             printf 'setenv PATH "%s/bin:${PATH}"\n' "$prefix"
+            printf 'rehash\n'
             printf 'if ( $?PKG_CONFIG_PATH ) then\n'
             printf '  setenv PKG_CONFIG_PATH "%s/lib/pkgconfig:%s/lib64/pkgconfig:${PKG_CONFIG_PATH}"\n' "$prefix" "$prefix"
             printf 'else\n  setenv PKG_CONFIG_PATH "%s/lib/pkgconfig:%s/lib64/pkgconfig"\nendif\n' "$prefix" "$prefix"

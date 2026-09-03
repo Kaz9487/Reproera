@@ -35,6 +35,7 @@ Usage:
   reproera init [PACKAGE[@VERSION] ...]
   reproera plan [PACKAGE[@VERSION]]
   reproera install [PACKAGE[@VERSION]] [--prefix PATH] [--jobs N] [--dry-run]
+  reproera verify [PACKAGE[@VERSION]]
   reproera env [bash|zsh|tcsh]
   reproera shell-init [bash|zsh|tcsh] [--apply]
   reproera version
@@ -45,6 +46,7 @@ Examples:
   reproera init python@3.11.16
   reproera plan python@3.11.9
   reproera install tmux@3.3a --prefix "$HOME/.local"
+  reproera verify
   eval "$(reproera env bash)"
 EOF
 }
@@ -94,6 +96,7 @@ main() {
         init) reproera_init_project "$@" ;;
         plan) reproera_plan "$@" ;;
         install) reproera_install "$@" ;;
+        verify) reproera_verify "$@" ;;
         env) reproera_cmd_env "$@" ;;
         shell-init) reproera_cmd_shell_init "$@" ;;
         version|--version|-V) printf 'Reproera %s\n' "$REPROERA_VERSION" ;;

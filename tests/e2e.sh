@@ -58,6 +58,7 @@ perl_bin="$(command -v perl)"
 [[ "$tmux_bin" == "$E2E_PREFIX/bin/tmux" ]]
 [[ "$perl_bin" == "$E2E_PREFIX/bin/perl" ]]
 "$perl_bin" -MIPC::Cmd -MTime::Piece -e 1
+"$REPROERA" verify
 
 REPROERA_EXPECTED_PREFIX="$E2E_PREFIX" "$python_bin" - <<'PY'
 import _ssl

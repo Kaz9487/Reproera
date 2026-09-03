@@ -64,6 +64,8 @@ test_project_self_install() {
         "$output" "activate with: source $project/.reproera/activate.tcsh"
     assert_contains "project installer creates tcsh activation" \
         "$(cat "$project/.reproera/activate.tcsh")" 'setenv PATH'
+    assert_contains "project tcsh activation refreshes command lookup" \
+        "$(cat "$project/.reproera/activate.tcsh")" 'rehash'
     assert_contains "project installer ignores its runtime directory" \
         "$(cat "$project/.reproera/.gitignore")" '!.gitignore'
     assert_contains "project installer is idempotent" \
@@ -171,7 +173,32 @@ test_prefix_scoped_markers() {
 test_environment() {
     assert_contains "bash environment" "$($REPROERA env bash)" 'export PATH='
     assert_contains "tcsh environment" "$($REPROERA env tcsh)" 'setenv PATH'
+    assert_contains "tcsh environment refreshes command lookup" \
+        "$($REPROERA env tcsh)" 'rehash'
     assert_contains "tcsh init uses native syntax" "$($REPROERA shell-init tcsh)" 'setenv PATH'
+}
+
+test_verify_diagnostics() {
+    local temporary project output status
+    temporary="$(mktemp -d)"
+    project="$temporary/project"
+    mkdir -p "$project/.reproera/prefix"
+    (cd "$project" && "$REPROERA" init tmux >/dev/null 2>&1)
+
+    set +e
+    output="$(cd "$project" && PATH=/usr/bin:/bin SHELL=/bin/tcsh \
+        "$REPROERA" verify 2>&1)"
+    status=$?
+    set -e
+    if [[ "$status" -ne 0 ]]; then
+        pass "verify fails for incomplete installation"
+    else
+        fail "verify fails for incomplete installation"
+    fi
+    assert_contains "verify reports missing package" "$output" '[missing] ncurses@6.5'
+    assert_contains "verify reports inactive environment" "$output" '[inactive]'
+    assert_contains "verify prints tcsh activation command" "$output" 'activate.tcsh'
+    rm -rf "$temporary"
 }
 
 test_doctor_json() {
@@ -280,6 +307,7 @@ main() {
     test_plan
     test_dry_run
     test_environment
+    test_verify_diagnostics
     test_prefix_scoped_markers
     test_doctor_json
     test_compiler_matrix

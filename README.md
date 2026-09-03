@@ -111,9 +111,17 @@ reproera list
 reproera init [PACKAGE[@VERSION] ...]
 reproera plan [PACKAGE[@VERSION]]
 reproera install [PACKAGE[@VERSION]] [--prefix PATH] [--jobs N] [--dry-run]
+reproera verify [PACKAGE[@VERSION]]
 reproera env [bash|zsh|tcsh]
 reproera shell-init [bash|zsh|tcsh] [--apply]
 ```
+
+`reproera install` ends with a verification summary that distinguishes a
+healthy installation from an inactive shell. Run `reproera verify` at any time
+to recheck every configured package, its installation marker, and whether the
+current shell resolves programs from the project prefix. `reproera env` prints
+shell code; it cannot modify its parent shell by itself. Project users should
+source `.reproera/activate` or `.reproera/activate.tcsh` instead.
 
 ## Supported recipes
 

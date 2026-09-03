@@ -9,6 +9,9 @@
   activation, and source-checkout removal.
 - Made project installation detect tcsh/csh and print the matching activation
   command first, preventing Bash activation syntax from being copied into tcsh.
+- Added an explicit post-install summary and `reproera verify`, including a
+  clear warning when installed programs are not active in the current shell.
+- Made tcsh activation run `rehash` after updating `PATH`.
 - Added a pinned Perl 5.40.2 source recipe so OpenSSL can build without the
   CentOS `perl-IPC-Cmd` and `perl-Time-Piece` RPMs.
 - Kept the original `~/.local` and explicit `--prefix PATH` installation modes
