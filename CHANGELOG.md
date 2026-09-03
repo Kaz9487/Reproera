@@ -11,6 +11,8 @@
   markers, and post-install smoke checks.
 - Added offline tests for GCC 4.8.5, 7.5.0, 11.5.0, and 13.3.0 detection.
 - Added CI definitions for Ubuntu 24.04, Rocky Linux 8, CentOS 7, and ShellCheck.
+- Added a weekly and manually dispatchable CentOS 7 end-to-end source build
+  that runs as an unprivileged user and validates runtime linkage and
+  idempotency.
 
-This alpha has not yet completed a networked end-to-end source build on CentOS
-7. GCC source bootstrap remains intentionally out of scope for this release.
+GCC source bootstrap remains intentionally out of scope for this release.

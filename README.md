@@ -92,10 +92,23 @@ GitHub Actions adds CentOS 7, Rocky Linux 8, Ubuntu 24.04, and ShellCheck jobs.
 See [docs/design.md](docs/design.md) for the distinction between simulated GCC
 versions and real container coverage.
 
+The networked end-to-end test performs clean source builds as an unprivileged
+CentOS 7 user, validates Python native modules and dynamic library origins,
+starts a real tmux server, and checks that repeated installations are
+idempotent:
+
+```bash
+bash tests/e2e.sh
+```
+
+It runs weekly, whenever its own test definition changes, and can also be
+started manually with the **End-to-end source build** workflow. Expect it to
+take substantially longer than the offline test suite.
+
 ## Known limitations
 
-- The source-build recipes have not yet completed an end-to-end CentOS 7 build
-  in this alpha.
+- The scheduled CentOS 7 end-to-end source build is intentionally separate
+  from the fast pull-request test suite.
 - Python may omit optional modules whose development libraries are unavailable,
   such as `_bz2`, `_lzma`, `_sqlite3`, `_ctypes`, or `readline`.
 - Build resume, uninstall, binary caches, ARM64, proxies, and offline source

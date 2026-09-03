@@ -19,6 +19,13 @@ The wrappers exercise detection and version-dependent behavior; they do not
 claim ABI-level equivalence to each compiler. Container CI provides the real
 CentOS 7/GCC 4.8 environment when GitHub Actions is enabled.
 
+The separate end-to-end workflow runs the installer as a non-root CentOS 7
+user. It compiles every declared Python and tmux dependency, checks runtime
+linkage back to the private prefix, exercises Python's SSL and zlib modules,
+starts a tmux server, and repeats both installations to verify marker-based
+idempotency. It is scheduled weekly rather than on every pull request because
+it downloads and rebuilds the complete graph.
+
 ## Trust model
 
 Every supported source archive has a pinned SHA-256 digest. A checksum mismatch
