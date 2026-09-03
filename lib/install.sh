@@ -70,7 +70,7 @@ reproera_run_recipe() {
                 --libdir=lib \
                 shared zlib --with-zlib-include="$prefix/include" \
                 --with-zlib-lib="$prefix/lib" && \
-                make -j"$jobs" build_sw && make install_sw)
+                make -j"$jobs" install_sw)
             ;;
         ncurses)
             (cd "$source_dir" && ./configure --prefix="$prefix" --with-shared \

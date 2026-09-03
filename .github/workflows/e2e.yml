@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: reproera-centos7-e2e
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   centos7-source-build:
