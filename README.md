@@ -38,28 +38,36 @@ MPC, and ISL dependencies.
 
 ## Quick start
 
-```bash
-git clone https://github.com/Kaz9487/Reproera.git reproera
-cd reproera
-./install.sh
-cd ..
-rm -rf reproera
+From the root of the project that needs the environment, clone Reproera as a
+temporary child directory and install its CLI locally:
 
-export PATH="$HOME/.local/bin:$PATH"
+```bash
+cd /path/to/my-project
+git clone --depth 1 https://github.com/Kaz9487/Reproera.git
+./Reproera/install.sh --project
+
+source .reproera/activate
 
 reproera doctor
-mkdir my-project && cd my-project
-reproera init
+reproera init python@3.11.16 tmux@3.6b
 reproera plan
-reproera install
-eval "$(reproera env bash)"
+reproera install --jobs 2
 ```
 
-`install.sh` copies the CLI runtime into `~/.local/libexec/reproera` and creates
-the relative link `~/.local/bin/reproera`. The cloned source checkout can then
-be removed without affecting the command or any environments it creates. Use
-`./install.sh --prefix PATH` to select a different user-owned prefix. The
-installer never invokes `sudo` or edits shell startup files.
+`--project` treats the Reproera checkout's parent as the project root. It copies
+the CLI into `.reproera`, creates `.reproera/activate` for Bash and Zsh, and
+creates `.reproera/activate.tcsh` for tcsh and csh. The source checkout can then
+be removed after installation succeeds, but the installer never removes it
+automatically. Activation binds `REPROERA_PREFIX` and `REPROERA_STATE_DIR` to
+that project, so commands cannot fall back to `~/.local` before
+`reproera.toml` exists. Re-enter the project later by sourcing the appropriate
+activation file again.
+
+For backward compatibility, `./install.sh` still installs the CLI into
+`~/.local`; `./install.sh --prefix PATH` selects another explicit user-owned
+prefix. Project mode does not modify `~/.local` or shell startup files. Source
+archives remain shared in `~/.cache/reproera` unless `REPROERA_CACHE_DIR` is
+overridden.
 
 ## Project environments
 
@@ -76,16 +84,16 @@ From the project root or any child directory, `doctor`, `plan`, `install`, and
 archives remain in the shared `~/.cache/reproera` cache. This keeps compiled
 environments isolated without downloading the same archives for every project.
 
-For tcsh:
+For a project-local tcsh environment:
 
 ```tcsh
-reproera shell-init tcsh
-reproera shell-init tcsh --apply
-source ~/.cshrc
+source .reproera/activate.tcsh
+reproera doctor
 ```
 
-`--apply` creates `~/.cshrc.reproera.bak` before changing an existing file.
-Without `--apply`, the command only prints the lines it would add.
+For an explicitly global installation, `reproera shell-init tcsh --apply`
+remains available and creates `~/.cshrc.reproera.bak` before changing an
+existing file. Without `--apply`, it only prints the lines it would add.
 
 ## Commands
 

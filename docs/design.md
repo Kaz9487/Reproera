@@ -53,15 +53,23 @@ resume support, signed release verification, and a lockfile are future work.
 ## Filesystem layout
 
 ```text
-~/.local/                 installation prefix
+project/.reproera/bin/             project-local Reproera CLI
+project/.reproera/libexec/         project-local CLI runtime
+project/.reproera/prefix/          project-local package prefix
+project/.reproera/state/           project-local build state
 ~/.cache/reproera/        downloaded archives
-~/.local/share/reproera/  build trees and installation markers
 ```
 
-All locations are overrideable with `REPROERA_PREFIX`, `REPROERA_CACHE_DIR`,
-and `REPROERA_STATE_DIR`.
+The legacy default CLI prefix remains `~/.local` when `install.sh` is invoked
+without `--project` or `--prefix`. All package locations are overrideable with
+`REPROERA_PREFIX`, `REPROERA_CACHE_DIR`, and `REPROERA_STATE_DIR`.
 
 Inside a directory containing `reproera.toml`, Reproera instead defaults to
 `.reproera/prefix` and `.reproera/state`. Project discovery walks from the
 current directory to the filesystem root, so commands also work in nested
 source directories. Explicit environment-variable overrides retain priority.
+Project-local CLI installation is selected with `install.sh --project`, which
+uses the source checkout's parent directory as the project root and generates
+activation files without editing a shell startup file. These files explicitly
+bind the package prefix and build state to the selected project, including
+before `reproera init` creates `reproera.toml`.

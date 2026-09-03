@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Added project-local CLI installation with `install.sh --project`.
+- Added generated activation files for Bash, Zsh, tcsh, and csh while keeping
+  the existing `reproera` command interface unchanged.
+- Kept the original `~/.local` and explicit `--prefix PATH` installation modes
+  for backward compatibility.
+
 ## 0.1.0-alpha.1 - 2026-09-03
 
 - Added a Bash 4.2-compatible command-line interface.

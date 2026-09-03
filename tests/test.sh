@@ -44,6 +44,54 @@ test_self_install() {
     rm -rf "$temporary"
 }
 
+test_project_self_install() {
+    local temporary project checkout installed output activated_path activated_prefix
+    temporary="$(mktemp -d)"
+    project="$temporary/project with spaces"
+    checkout="$project/Reproera"
+    installed="$project/.reproera/bin/reproera"
+    mkdir -p "$checkout/bin" "$checkout/lib"
+    cp "$TEST_ROOT/install.sh" "$checkout/install.sh"
+    cp "$TEST_ROOT/bin/reproera" "$checkout/bin/reproera"
+    cp "$TEST_ROOT"/lib/*.sh "$checkout/lib/"
+
+    output="$(HOME="$temporary/home" bash "$checkout/install.sh" --project)"
+    assert_contains "project installer reports project root" "$output" "$project"
+    assert_contains "project installer reports activation command" \
+        "$output" "$project/.reproera/activate"
+    assert_contains "project installer creates tcsh activation" \
+        "$(cat "$project/.reproera/activate.tcsh")" 'setenv PATH'
+    assert_contains "project installer ignores its runtime directory" \
+        "$(cat "$project/.reproera/.gitignore")" '!.gitignore'
+    assert_contains "project installer is idempotent" \
+        "$(HOME="$temporary/home" bash "$checkout/install.sh" --project)" "$installed"
+
+    rm -rf "$checkout"
+    assert_contains "project-installed CLI works after checkout removal" \
+        "$(cd "$project" && "$installed" version)" "0.1.0-alpha.1"
+
+    activated_path="$(cd "$project" && PATH=/usr/bin:/bin bash -c \
+        'source .reproera/activate; command -v reproera')"
+    assert_equals "project activation exposes the CLI" "$activated_path" "$installed"
+    activated_prefix="$(cd "$project" && PATH=/usr/bin:/bin bash -c \
+        'source .reproera/activate; reproera env bash')"
+    assert_contains "project activation selects the local package prefix" \
+        "$activated_prefix" "$project/.reproera/prefix/bin"
+    if [[ ! -e "$temporary/home/.local" ]]; then
+        pass "project installer does not touch HOME/.local"
+    else
+        fail "project installer does not touch HOME/.local"
+    fi
+
+    if HOME="$temporary/home" bash "$TEST_ROOT/install.sh" --project \
+        --prefix "$temporary/other" >/dev/null 2>&1; then
+        fail "project and explicit prefix modes are mutually exclusive"
+    else
+        pass "project and explicit prefix modes are mutually exclusive"
+    fi
+    rm -rf "$temporary"
+}
+
 test_project_mode() {
     local temporary project second_project subdir output expected_prefix
     temporary="$(mktemp -d)"
@@ -223,6 +271,7 @@ main() {
     printf 'TAP version 13\n'
     test_version
     test_self_install
+    test_project_self_install
     test_project_mode
     test_plan
     test_dry_run
