@@ -3,6 +3,8 @@ name: End-to-end source build
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - ".github/workflows/e2e.yml"
       - "bin/**"
@@ -16,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: reproera-centos7-e2e
+  group: reproera-centos7-e2e-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
