@@ -3,7 +3,17 @@
 set -u
 set -o pipefail
 
-REPROERA_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPROERA_ENTRYPOINT="${BASH_SOURCE[0]}"
+while [[ -L "$REPROERA_ENTRYPOINT" ]]; do
+    REPROERA_LINK_DIR="$(cd "$(dirname "$REPROERA_ENTRYPOINT")" && pwd -P)"
+    REPROERA_LINK_TARGET="$(readlink "$REPROERA_ENTRYPOINT")"
+    if [[ "$REPROERA_LINK_TARGET" == /* ]]; then
+        REPROERA_ENTRYPOINT="$REPROERA_LINK_TARGET"
+    else
+        REPROERA_ENTRYPOINT="$REPROERA_LINK_DIR/$REPROERA_LINK_TARGET"
+    fi
+done
+REPROERA_SCRIPT_DIR="$(cd "$(dirname "$REPROERA_ENTRYPOINT")" && pwd -P)"
 REPROERA_ROOT="$(cd "${REPROERA_SCRIPT_DIR}/.." && pwd)"
 
 # shellcheck source=../lib/common.sh

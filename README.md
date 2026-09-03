@@ -37,14 +37,23 @@ MPC, and ISL dependencies.
 ```bash
 git clone https://github.com/Kaz9487/Reproera.git reproera
 cd reproera
-chmod +x bin/reproera tests/test.sh
-export PATH="$PWD/bin:$PATH"
+./install.sh
+cd ..
+rm -rf reproera
+
+export PATH="$HOME/.local/bin:$PATH"
 
 reproera doctor
 reproera plan python
 reproera install python --prefix "$HOME/.local"
 eval "$(reproera env bash)"
 ```
+
+`install.sh` copies the CLI runtime into `~/.local/libexec/reproera` and creates
+the relative link `~/.local/bin/reproera`. The cloned source checkout can then
+be removed without affecting the command or any environments it creates. Use
+`./install.sh --prefix PATH` to select a different user-owned prefix. The
+installer never invokes `sudo` or edits shell startup files.
 
 For tcsh:
 

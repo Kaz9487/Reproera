@@ -25,6 +25,25 @@ test_version() {
     assert_contains "version command" "$($REPROERA version)" "0.1.0-alpha.1"
 }
 
+test_self_install() {
+    local temporary prefix installed output
+    temporary="$(mktemp -d)"
+    prefix="$temporary/prefix"
+    installed="$prefix/bin/reproera"
+
+    output="$(bash "$TEST_ROOT/install.sh" --prefix "$prefix")"
+    assert_contains "self installer reports destination" "$output" "$installed"
+    assert_equals "self installer uses relocatable link" \
+        "$(readlink "$installed")" "../libexec/reproera/bin/reproera"
+    assert_contains "installed CLI works outside checkout" \
+        "$(cd / && HOME="$temporary" "$installed" version)" "0.1.0-alpha.1"
+
+    bash "$TEST_ROOT/install.sh" --prefix "$prefix" >/dev/null
+    assert_contains "self installer is idempotent" \
+        "$(cd / && HOME="$temporary" "$installed" plan tmux)" "tmux@3.6b"
+    rm -rf "$temporary"
+}
+
 test_plan() {
     assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
     assert_equals "tmux dependency plan" "$($REPROERA plan tmux)" $'ncurses@6.5\nlibevent@2.1.13-stable\ntmux@3.6b'
@@ -155,6 +174,7 @@ test_unsupported_version() {
 main() {
     printf 'TAP version 13\n'
     test_version
+    test_self_install
     test_plan
     test_dry_run
     test_environment
