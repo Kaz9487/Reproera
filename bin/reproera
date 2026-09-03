@@ -32,8 +32,9 @@ Reproera builds developer tools into a user-owned prefix without sudo.
 Usage:
   reproera doctor [--json]
   reproera list
-  reproera plan PACKAGE[@VERSION]
-  reproera install PACKAGE[@VERSION] [--prefix PATH] [--jobs N] [--dry-run]
+  reproera init [PACKAGE[@VERSION] ...]
+  reproera plan [PACKAGE[@VERSION]]
+  reproera install [PACKAGE[@VERSION]] [--prefix PATH] [--jobs N] [--dry-run]
   reproera env [bash|zsh|tcsh]
   reproera shell-init [bash|zsh|tcsh] [--apply]
   reproera version
@@ -41,6 +42,7 @@ Usage:
 
 Examples:
   reproera doctor
+  reproera init python@3.11.16
   reproera plan python@3.11.9
   reproera install tmux@3.3a --prefix "$HOME/.local"
   eval "$(reproera env bash)"
@@ -89,6 +91,7 @@ main() {
     case "$command" in
         doctor) reproera_doctor "$@" ;;
         list) reproera_cmd_list "$@" ;;
+        init) reproera_init_project "$@" ;;
         plan) reproera_plan "$@" ;;
         install) reproera_install "$@" ;;
         env) reproera_cmd_env "$@" ;;

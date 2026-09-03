@@ -44,6 +44,54 @@ test_self_install() {
     rm -rf "$temporary"
 }
 
+test_project_mode() {
+    local temporary project second_project subdir output expected_prefix
+    temporary="$(mktemp -d)"
+    project="$temporary/project"
+    subdir="$project/src/module"
+    mkdir -p "$subdir"
+
+    output="$(cd "$project" && "$REPROERA" init 2>&1)"
+    assert_contains "project init reports root" "$output" "$project"
+    assert_contains "project init pins default Python" \
+        "$(cat "$project/reproera.toml")" 'python = "3.11.16"'
+    assert_contains "project runtime directory is ignored" \
+        "$(cat "$project/.reproera/.gitignore")" '!.gitignore'
+
+    expected_prefix="$project/.reproera/prefix"
+    assert_contains "project env selects local prefix" \
+        "$(cd "$project" && "$REPROERA" env bash)" "$expected_prefix/bin"
+    assert_contains "subdirectory discovers project root" \
+        "$(cd "$subdir" && "$REPROERA" env bash)" "$expected_prefix/bin"
+    assert_contains "explicit prefix overrides project discovery" \
+        "$(cd "$subdir" && REPROERA_PREFIX="$temporary/override" "$REPROERA" env bash)" \
+        "$temporary/override/bin"
+    assert_equals "project plan reads reproera.toml" \
+        "$(cd "$subdir" && "$REPROERA" plan)" \
+        $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
+    assert_contains "project install supports options without a package" \
+        "$(cd "$project" && "$REPROERA" install --dry-run 2>&1)" "prefix=$expected_prefix"
+
+    printf '[environment]\npython = 3.11.16\n' >"$project/reproera.toml"
+    if output="$(cd "$project" && "$REPROERA" plan 2>&1)"; then
+        fail "invalid project configuration is rejected"
+    else
+        pass "invalid project configuration is rejected"
+    fi
+    assert_contains "invalid project configuration explains location" "$output" "reproera.toml:2"
+
+    second_project="$temporary/second-project"
+    mkdir -p "$second_project"
+    (cd "$second_project" && "$REPROERA" init tmux@3.3a >/dev/null 2>&1)
+    assert_contains "second project has an independent prefix" \
+        "$(cd "$second_project" && "$REPROERA" env bash)" \
+        "$second_project/.reproera/prefix/bin"
+    assert_equals "second project has an independent package plan" \
+        "$(cd "$second_project" && "$REPROERA" plan)" \
+        $'ncurses@6.5\nlibevent@2.1.13-stable\ntmux@3.3a'
+    rm -rf "$temporary"
+}
+
 test_plan() {
     assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
     assert_equals "tmux dependency plan" "$($REPROERA plan tmux)" $'ncurses@6.5\nlibevent@2.1.13-stable\ntmux@3.6b'
@@ -175,6 +223,7 @@ main() {
     printf 'TAP version 13\n'
     test_version
     test_self_install
+    test_project_mode
     test_plan
     test_dry_run
     test_environment

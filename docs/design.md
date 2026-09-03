@@ -59,3 +59,8 @@ resume support, signed release verification, and a lockfile are future work.
 
 All locations are overrideable with `REPROERA_PREFIX`, `REPROERA_CACHE_DIR`,
 and `REPROERA_STATE_DIR`.
+
+Inside a directory containing `reproera.toml`, Reproera instead defaults to
+`.reproera/prefix` and `.reproera/state`. Project discovery walks from the
+current directory to the filesystem root, so commands also work in nested
+source directories. Explicit environment-variable overrides retain priority.

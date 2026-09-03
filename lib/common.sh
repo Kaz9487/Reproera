@@ -8,12 +8,41 @@ reproera_info() { printf '[reproera] %s\n' "$*" >&2; }
 reproera_warn() { printf '[reproera] warning: %s\n' "$*" >&2; }
 reproera_die() { printf '[reproera] error: %s\n' "$*" >&2; exit 1; }
 
+reproera_find_project_root() {
+    local current parent
+    current="$(cd "${1:-$PWD}" 2>/dev/null && pwd -P)" || return 1
+    while true; do
+        if [[ -f "$current/reproera.toml" ]]; then
+            printf '%s\n' "$current"
+            return 0
+        fi
+        [[ "$current" != "/" ]] || return 1
+        parent="$(dirname "$current")"
+        [[ "$parent" != "$current" ]] || return 1
+        current="$parent"
+    done
+}
+
 reproera_default_prefix() {
-    printf '%s\n' "${REPROERA_PREFIX:-${HOME}/.local}"
+    local project_root
+    if [[ -n "${REPROERA_PREFIX:-}" ]]; then
+        printf '%s\n' "$REPROERA_PREFIX"
+    elif project_root="$(reproera_find_project_root)"; then
+        printf '%s/.reproera/prefix\n' "$project_root"
+    else
+        printf '%s/.local\n' "$HOME"
+    fi
 }
 
 reproera_state_dir() {
-    printf '%s\n' "${REPROERA_STATE_DIR:-${HOME}/.local/share/reproera}"
+    local project_root
+    if [[ -n "${REPROERA_STATE_DIR:-}" ]]; then
+        printf '%s\n' "$REPROERA_STATE_DIR"
+    elif project_root="$(reproera_find_project_root)"; then
+        printf '%s/.reproera/state\n' "$project_root"
+    else
+        printf '%s/.local/share/reproera\n' "$HOME"
+    fi
 }
 
 reproera_cache_dir() {

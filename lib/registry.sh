@@ -91,6 +91,48 @@ reproera_recipe_archive() {
     printf '%s\n' "${url##*/}"
 }
 
+reproera_project_specs() {
+    local project_root config
+    project_root="$(reproera_find_project_root)" \
+        || reproera_die "no reproera.toml found in this directory or its parents"
+    config="$project_root/reproera.toml"
+
+    awk '
+        function trim(value) {
+            sub(/^[[:space:]]+/, "", value)
+            sub(/[[:space:]]+$/, "", value)
+            return value
+        }
+        BEGIN { section = ""; count = 0 }
+        {
+            line = trim($0)
+            if (line == "" || line ~ /^#/) next
+            if (line ~ /^\[[^]]+\]$/) {
+                section = line
+                next
+            }
+            if (section != "[environment]") next
+            if (line !~ /^[a-z][a-z0-9_-]*[[:space:]]*=[[:space:]]*"[^"]+"$/) {
+                printf "[reproera] error: invalid environment entry at %s:%d\n", FILENAME, NR > "/dev/stderr"
+                exit 2
+            }
+            key = line
+            sub(/[[:space:]]*=.*/, "", key)
+            value = line
+            sub(/^[^=]*=[[:space:]]*"/, "", value)
+            sub(/"$/, "", value)
+            print key "@" value
+            count++
+        }
+        END {
+            if (count == 0) {
+                printf "[reproera] error: no packages declared in [environment]\n" > "/dev/stderr"
+                exit 3
+            }
+        }
+    ' "$config"
+}
+
 reproera_resolve_spec() {
     local spec="$1"
     local package version

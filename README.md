@@ -44,8 +44,10 @@ rm -rf reproera
 export PATH="$HOME/.local/bin:$PATH"
 
 reproera doctor
-reproera plan python
-reproera install python --prefix "$HOME/.local"
+mkdir my-project && cd my-project
+reproera init
+reproera plan
+reproera install
 eval "$(reproera env bash)"
 ```
 
@@ -54,6 +56,21 @@ the relative link `~/.local/bin/reproera`. The cloned source checkout can then
 be removed without affecting the command or any environments it creates. Use
 `./install.sh --prefix PATH` to select a different user-owned prefix. The
 installer never invokes `sudo` or edits shell startup files.
+
+## Project environments
+
+`reproera init` creates a pinned `reproera.toml` and a private `.reproera/`
+runtime directory. With no package arguments it selects the default Python;
+packages can instead be specified explicitly:
+
+```bash
+reproera init python@3.11.9 tmux@3.3a
+```
+
+From the project root or any child directory, `doctor`, `plan`, `install`, and
+`env` automatically use `.reproera/prefix` and `.reproera/state`. Source
+archives remain in the shared `~/.cache/reproera` cache. This keeps compiled
+environments isolated without downloading the same archives for every project.
 
 For tcsh:
 
@@ -71,8 +88,9 @@ Without `--apply`, the command only prints the lines it would add.
 ```text
 reproera doctor [--json]
 reproera list
-reproera plan PACKAGE[@VERSION]
-reproera install PACKAGE[@VERSION] [--prefix PATH] [--jobs N] [--dry-run]
+reproera init [PACKAGE[@VERSION] ...]
+reproera plan [PACKAGE[@VERSION]]
+reproera install [PACKAGE[@VERSION]] [--prefix PATH] [--jobs N] [--dry-run]
 reproera env [bash|zsh|tcsh]
 reproera shell-init [bash|zsh|tcsh] [--apply]
 ```
