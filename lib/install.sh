@@ -74,7 +74,8 @@ reproera_run_recipe() {
             ;;
         libffi)
             (cd "$source_dir" && ./configure --prefix="$prefix" \
-                --libdir="$prefix/lib" --includedir="$prefix/include" && \
+                --libdir="$prefix/lib" --includedir="$prefix/include" \
+                --disable-multi-os-directory && \
                 make -j"$jobs" && make install)
             ;;
         sqlite)
