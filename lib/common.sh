@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# This library is sourced by bin/reproera, which prints the version.
+# shellcheck disable=SC2034
 REPROERA_VERSION="0.1.0-alpha.1"
 
 reproera_info() { printf '[reproera] %s\n' "$*" >&2; }
