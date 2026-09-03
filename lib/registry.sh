@@ -32,6 +32,7 @@ reproera_recipe_dependencies() {
 reproera_recipe_required_commands() {
     case "$1" in
         openssl) printf '%s\n' perl ;;
+        tmux) printf '%s\n' yacc ;;
         *) return 0 ;;
     esac
 }
