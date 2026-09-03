@@ -18,21 +18,24 @@ else
     E2E_WORK_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/reproera-e2e.XXXXXXXX")"
 fi
 
-export REPROERA_PREFIX="${E2E_WORK_ROOT}/prefix"
-export REPROERA_STATE_DIR="${E2E_WORK_ROOT}/state"
 export REPROERA_CACHE_DIR="${E2E_WORK_ROOT}/cache"
 export SHELL="/bin/bash"
 E2E_JOBS="${REPROERA_E2E_JOBS:-2}"
+E2E_PROJECT_ROOT="${E2E_WORK_ROOT}/project"
+E2E_PREFIX="${E2E_PROJECT_ROOT}/.reproera/prefix"
+mkdir -p "$E2E_PROJECT_ROOT"
+cd "$E2E_PROJECT_ROOT"
 
 printf 'Reproera end-to-end source build\n'
 printf '  user:      %s (uid %s)\n' "$(id -un)" "$(id -u)"
 printf '  compiler:  %s\n' "${CC:-cc}"
 printf '  workspace: %s\n' "$E2E_WORK_ROOT"
-printf '  prefix:    %s\n' "$REPROERA_PREFIX"
+printf '  project:   %s\n' "$E2E_PROJECT_ROOT"
+printf '  prefix:    %s\n' "$E2E_PREFIX"
 
+"$REPROERA" init tmux python
 "$REPROERA" doctor
-"$REPROERA" install tmux --jobs "$E2E_JOBS"
-"$REPROERA" install python --jobs "$E2E_JOBS"
+"$REPROERA" install --jobs "$E2E_JOBS"
 
 # The generated environment must make the installed programs discoverable and
 # provide runtime paths for libraries built inside the private prefix.
@@ -41,10 +44,10 @@ hash -r
 
 python_bin="$(command -v python3.11)"
 tmux_bin="$(command -v tmux)"
-[[ "$python_bin" == "$REPROERA_PREFIX/bin/python3.11" ]]
-[[ "$tmux_bin" == "$REPROERA_PREFIX/bin/tmux" ]]
+[[ "$python_bin" == "$E2E_PREFIX/bin/python3.11" ]]
+[[ "$tmux_bin" == "$E2E_PREFIX/bin/tmux" ]]
 
-REPROERA_EXPECTED_PREFIX="$REPROERA_PREFIX" "$python_bin" - <<'PY'
+REPROERA_EXPECTED_PREFIX="$E2E_PREFIX" "$python_bin" - <<'PY'
 import _ssl
 import bz2
 import ctypes
@@ -81,7 +84,7 @@ assert_module_link() {
     local module="$1" library_pattern="$2" module_file module_links
     module_file="$($python_bin -c "import $module; print($module.__file__)")"
     module_links="$(ldd "$module_file")"
-    printf '%s\n' "$module_links" | grep -E "$library_pattern" | grep -F "$REPROERA_PREFIX/" >/dev/null
+    printf '%s\n' "$module_links" | grep -E "$library_pattern" | grep -F "$E2E_PREFIX/" >/dev/null
 }
 
 assert_module_link _ssl 'lib(ssl|crypto)'
@@ -96,8 +99,8 @@ assert_module_link readline 'libreadline'
 # package (none is installed in the CentOS 7 image).
 
 tmux_links="$(ldd "$tmux_bin")"
-printf '%s\n' "$tmux_links" | grep -E 'libevent' | grep -F "$REPROERA_PREFIX/" >/dev/null
-printf '%s\n' "$tmux_links" | grep -E 'lib(ncurses|tinfo)' | grep -F "$REPROERA_PREFIX/" >/dev/null
+printf '%s\n' "$tmux_links" | grep -E 'libevent' | grep -F "$E2E_PREFIX/" >/dev/null
+printf '%s\n' "$tmux_links" | grep -E 'lib(ncurses|tinfo)' | grep -F "$E2E_PREFIX/" >/dev/null
 
 "$tmux_bin" -V | grep -F 'tmux 3.6b' >/dev/null
 "$tmux_bin" -L reproera-e2e -f /dev/null new-session -d -s smoke 'sleep 30'
@@ -106,15 +109,14 @@ printf '%s\n' "$tmux_links" | grep -E 'lib(ncurses|tinfo)' | grep -F "$REPROERA_
 
 # A second installation must use the prefix-scoped markers and perform no
 # downloads or builds.
-second_python="$($REPROERA install python --jobs "$E2E_JOBS" 2>&1)"
-second_tmux="$($REPROERA install tmux --jobs "$E2E_JOBS" 2>&1)"
-printf '%s\n%s\n' "$second_python" "$second_tmux" | grep -F 'is already installed' >/dev/null
-if printf '%s\n%s\n' "$second_python" "$second_tmux" | grep -E '\b(downloading|building)\b' >/dev/null; then
+second_install="$($REPROERA install --jobs "$E2E_JOBS" 2>&1)"
+printf '%s\n' "$second_install" | grep -F 'is already installed' >/dev/null
+if printf '%s\n' "$second_install" | grep -E '\b(downloading|building)\b' >/dev/null; then
     printf 'error: the second installation unexpectedly rebuilt a package\n' >&2
     exit 1
 fi
 
-if find "$REPROERA_PREFIX" ! -user "$(id -u)" -print -quit | grep -q .; then
+if find "$E2E_PROJECT_ROOT/.reproera" ! -user "$(id -u)" -print -quit | grep -q .; then
     printf 'error: the installation prefix contains files owned by another user\n' >&2
     exit 1
 fi

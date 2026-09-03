@@ -124,10 +124,10 @@ GitHub Actions adds CentOS 7, Rocky Linux 8, Ubuntu 24.04, and ShellCheck jobs.
 See [docs/design.md](docs/design.md) for the distinction between simulated GCC
 versions and real container coverage.
 
-The networked end-to-end test performs clean source builds as an unprivileged
-CentOS 7 user, validates Python native modules and dynamic library origins,
-starts a real tmux server, and checks that repeated installations are
-idempotent:
+The networked end-to-end test initializes a temporary project and performs
+clean source builds as an unprivileged CentOS 7 user. It validates automatic
+project discovery, Python native modules and dynamic library origins, starts a
+real tmux server, and checks that repeated installations are idempotent:
 
 ```bash
 bash tests/e2e.sh
