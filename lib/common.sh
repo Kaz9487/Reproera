@@ -146,8 +146,8 @@ reproera_extract_archive() {
     done < <(tar -tf "$archive")
     mkdir -p "$destination"
     case "$archive" in
-        *.tar.gz|*.tgz) tar -xzf "$archive" -C "$destination" ;;
-        *.tar.xz) tar -xJf "$archive" -C "$destination" ;;
+        *.tar.gz|*.tgz) tar --no-same-owner -xzf "$archive" -C "$destination" ;;
+        *.tar.xz) tar --no-same-owner -xJf "$archive" -C "$destination" ;;
         *) reproera_die "unsupported archive format: $archive" ;;
     esac
 }

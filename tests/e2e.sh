@@ -53,8 +53,11 @@ hash -r
 
 python_bin="$(command -v python3.11)"
 tmux_bin="$(command -v tmux)"
+perl_bin="$(command -v perl)"
 [[ "$python_bin" == "$E2E_PREFIX/bin/python3.11" ]]
 [[ "$tmux_bin" == "$E2E_PREFIX/bin/tmux" ]]
+[[ "$perl_bin" == "$E2E_PREFIX/bin/perl" ]]
+"$perl_bin" -MIPC::Cmd -MTime::Piece -e 1
 
 REPROERA_EXPECTED_PREFIX="$E2E_PREFIX" "$python_bin" - <<'PY'
 import _ssl

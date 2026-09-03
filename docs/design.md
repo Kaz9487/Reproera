@@ -13,7 +13,6 @@ package manager.
 - A working C compiler, `make`, `tar`, `awk`, `sed`, and `sort`
 - `curl` or `wget`
 - `sha256sum` or `shasum`
-- Perl with `IPC::Cmd` and `Time::Piece` when building OpenSSL
 - `yacc` (commonly provided by Bison) when building tmux
 
 The initial compiler test matrix models GCC 4.8.5, 7.5.0, 11.5.0, and 13.3.0.
@@ -41,6 +40,7 @@ absolute paths and parent-directory traversal before extraction.
 
 ```text
 python   -> zlib, bzip2, xz, libffi, SQLite, OpenSSL 3.5 LTS, readline
+OpenSSL  -> Perl 5.40 (provides IPC::Cmd and Time::Piece without system RPMs)
 readline -> ncurses
 tmux     -> ncurses, libevent
 ```

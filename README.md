@@ -27,7 +27,8 @@ turns that process into an inspectable build plan with pinned sources.
   and prefix permissions.
 - Detect GCC and Clang, including old GCC versions.
 - Resolve and display dependency-aware build plans.
-- Build pinned Python and tmux stacks, including their native dependencies.
+- Build pinned Python and tmux stacks, including a project-local Perl used to
+  build OpenSSL when a minimal host Perl lacks required modules.
 - Emit environment setup for Bash, Zsh, and tcsh.
 - Refuse unknown versions and fail on checksum mismatches.
 - Test compiler detection against GCC 4.8.5 through 13.3.0 fixtures.
@@ -123,6 +124,7 @@ reproera shell-init [bash|zsh|tcsh] [--apply]
 | xz | 5.8.3 | Enables Python `lzma` |
 | libffi | 3.8.0 | Enables Python `ctypes` |
 | SQLite | 3.53.4 | Enables Python `sqlite3` |
+| Perl | 5.40.2 | Rootless OpenSSL build dependency |
 | OpenSSL | 3.5.8 LTS | Python dependency |
 | ncurses | 6.5 | Enables Python `curses`; tmux dependency |
 | readline | 8.3 | Enables Python `readline` |

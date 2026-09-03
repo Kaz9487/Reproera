@@ -7,6 +7,7 @@ reproera_default_version() {
         xz) printf '5.8.3\n' ;;
         libffi) printf '3.8.0\n' ;;
         sqlite) printf '3.53.4\n' ;;
+        perl) printf '5.40.2\n' ;;
         openssl) printf '3.5.8\n' ;;
         ncurses) printf '6.5\n' ;;
         readline) printf '8.3\n' ;;
@@ -20,7 +21,7 @@ reproera_default_version() {
 
 reproera_package_status() {
     case "$1" in
-        zlib|bzip2|xz|libffi|sqlite|openssl|ncurses|readline|libevent|python|tmux) printf 'source recipe\n' ;;
+        zlib|bzip2|xz|libffi|sqlite|perl|openssl|ncurses|readline|libevent|python|tmux) printf 'source recipe\n' ;;
         gcc) printf 'diagnostics only (bootstrap planned)\n' ;;
         *) return 1 ;;
     esac
@@ -29,6 +30,7 @@ reproera_package_status() {
 reproera_recipe_dependencies() {
     case "$1" in
         readline) printf '%s\n' ncurses ;;
+        openssl) printf '%s\n' perl ;;
         python) printf '%s\n' zlib bzip2 xz libffi sqlite openssl readline ;;
         tmux) printf '%s\n' ncurses libevent ;;
         *) return 0 ;;
@@ -37,7 +39,6 @@ reproera_recipe_dependencies() {
 
 reproera_recipe_required_commands() {
     case "$1" in
-        openssl) printf '%s\n' perl ;;
         tmux) printf '%s\n' yacc ;;
         *) return 0 ;;
     esac
@@ -52,6 +53,7 @@ reproera_recipe_url() {
         xz@5.8.3) printf 'https://github.com/tukaani-project/xz/releases/download/v5.8.3/xz-5.8.3.tar.xz\n' ;;
         libffi@3.8.0) printf 'https://github.com/libffi/libffi/releases/download/v3.8.0/libffi-3.8.0.tar.gz\n' ;;
         sqlite@3.53.4) printf 'https://www.sqlite.org/2026/sqlite-autoconf-3530400.tar.gz\n' ;;
+        perl@5.40.2) printf 'https://www.cpan.org/src/5.0/perl-5.40.2.tar.gz\n' ;;
         openssl@3.5.8) printf 'https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz\n' ;;
         ncurses@6.5) printf 'https://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.5.tar.gz\n' ;;
         readline@8.3) printf 'https://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz\n' ;;
@@ -73,6 +75,7 @@ reproera_recipe_sha256() {
         xz@5.8.3) printf 'fff1ffcf2b0da84d308a14de513a1aa23d4e9aa3464d17e64b9714bfdd0bbfb6\n' ;;
         libffi@3.8.0) printf '7da3e2d9a171eb0a038f592ecad3ff2bb2550f3496d87b3b29ad0cf4430c0db4\n' ;;
         sqlite@3.53.4) printf '0e9483900e92cd5de8fd48d16bf9200145a61f7fd5be542a5ac81d8a9516eb9c\n' ;;
+        perl@5.40.2) printf '10d4647cfbb543a7f9ae3e5f6851ec49305232ea7621aed24c7cfbb0bef4b70d\n' ;;
         openssl@3.5.8) printf 'a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2\n' ;;
         ncurses@6.5) printf '136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6\n' ;;
         readline@8.3) printf 'fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc\n' ;;

@@ -119,10 +119,16 @@ reproera_run_recipe() {
                 --disable-static --disable-readline && \
                 make -j"$jobs" && make install)
             ;;
+        perl)
+            (cd "$source_dir" && sh Configure -des \
+                -Dprefix="$prefix" -Dman1dir=none -Dman3dir=none && \
+                make -j"$jobs" && make install)
+            ;;
         openssl)
             (cd "$source_dir" && CPPFLAGS="-I$prefix/include ${CPPFLAGS:-}" \
                 LDFLAGS="-L$prefix/lib -Wl,-rpath,$prefix/lib ${LDFLAGS:-}" \
-                ./Configure --prefix="$prefix" --openssldir="$prefix/ssl" \
+                "$prefix/bin/perl" ./Configure \
+                --prefix="$prefix" --openssldir="$prefix/ssl" \
                 --libdir=lib \
                 shared zlib --with-zlib-include="$prefix/include" \
                 --with-zlib-lib="$prefix/lib" && \
@@ -190,6 +196,10 @@ reproera_verify_install() {
         sqlite)
             "$prefix/bin/sqlite3" -version >/dev/null || reproera_die "SQLite verification failed"
             ;;
+        perl)
+            "$prefix/bin/perl" -MIPC::Cmd -MTime::Piece -e 1 \
+                || reproera_die "Perl verification failed"
+            ;;
         openssl)
             "$prefix/bin/openssl" version >/dev/null || reproera_die "OpenSSL verification failed"
             ;;
@@ -223,11 +233,6 @@ reproera_check_plan_requirements() {
                 missing=1
             fi
         done
-        if [[ "$package" == "openssl" ]] && reproera_command_exists perl \
-            && ! perl -MIPC::Cmd -MTime::Piece -e 1 >/dev/null 2>&1; then
-            reproera_warn "openssl requires the Perl IPC::Cmd and Time::Piece modules"
-            missing=1
-        fi
     done < <(reproera_plan "$spec")
     [[ "$missing" -eq 0 ]]
 }

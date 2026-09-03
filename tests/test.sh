@@ -120,7 +120,7 @@ test_project_mode() {
         "$temporary/override/bin"
     assert_equals "project plan reads reproera.toml" \
         "$(cd "$subdir" && "$REPROERA" plan)" \
-        $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
+        $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nperl@5.40.2\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
     assert_contains "project install supports options without a package" \
         "$(cd "$project" && "$REPROERA" install --dry-run 2>&1)" "prefix=$expected_prefix"
 
@@ -145,7 +145,7 @@ test_project_mode() {
 }
 
 test_plan() {
-    assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
+    assert_equals "python dependency plan" "$($REPROERA plan python)" $'zlib@1.3.1\nbzip2@1.0.8\nxz@5.8.3\nlibffi@3.8.0\nsqlite@3.53.4\nperl@5.40.2\nopenssl@3.5.8\nncurses@6.5\nreadline@8.3\npython@3.11.16'
     assert_equals "tmux dependency plan" "$($REPROERA plan tmux)" $'ncurses@6.5\nlibevent@2.1.13-stable\ntmux@3.6b'
 }
 
