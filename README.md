@@ -4,193 +4,100 @@
 [![End-to-end source build](https://github.com/Kaz9487/Reproera/actions/workflows/e2e.yml/badge.svg)](https://github.com/Kaz9487/Reproera/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Reproera builds selected developer tools into a user-owned Linux prefix without
-`sudo`. It targets constrained university and laboratory servers where the base
-OS, compiler, and system packages may be old.
+Rootless, reproducible developer environments for old and restricted Linux
+systems.
 
-The name combines **reproducible** with **era**: reproducible development
-environments across different eras of Linux systems.
+Reproera builds pinned Python and tmux toolchains inside each project without
+`sudo`, changing system packages, or mixing files with other projects. It is
+designed for shared university and laboratory servers such as CentOS 7 hosts
+with GCC 4.8.5.
 
-> **Status:** `0.1.0-alpha.1`. Review the limitations before using it on an
-> important machine.
-
-## Why Reproera?
-
-On shared servers, users often cannot upgrade Python, tmux, OpenSSL, or other
-build dependencies. Copy-pasted installation commands tend to omit checksums,
-mix files across prefixes, and break differently under Bash and tcsh. Reproera
-turns that process into an inspectable build plan with pinned sources.
-
-## Current capabilities
-
-- Diagnose the OS, shell, compiler, build commands, downloader, checksum tool,
-  and prefix permissions.
-- Detect GCC and Clang, including old GCC versions.
-- Resolve and display dependency-aware build plans.
-- Build pinned Python and tmux stacks, including a project-local Perl used to
-  build OpenSSL when a minimal host Perl lacks required modules.
-- Emit environment setup for Bash, Zsh, and tcsh.
-- Refuse unknown versions and fail on checksum mismatches.
-- Test compiler detection against GCC 4.8.5 through 13.3.0 fixtures.
-
-GCC installation is **not implemented** in this alpha. Reproera diagnoses the
-host compiler; a complete GCC bootstrap recipe will require pinned GMP, MPFR,
-MPC, and ISL dependencies.
+> **Status:** `0.1.0-alpha.1`. Reproera currently targets Linux x86-64.
 
 ## Quick start
 
-From the root of the project that needs the environment, clone Reproera as a
-temporary child directory and install its CLI locally:
+Run these commands from the project that needs the environment:
 
 ```bash
 cd /path/to/my-project
 git clone --depth 1 https://github.com/Kaz9487/Reproera.git
 ./Reproera/install.sh --project
 
-# Bash or Zsh (use the activation command printed by the installer):
+# Bash or Zsh
 source .reproera/activate
 
 reproera doctor
 reproera init python@3.11.16 tmux@3.6b
 reproera plan
 reproera install --jobs 2
+reproera verify
 ```
 
-For tcsh or csh, replace the activation line above with:
+For tcsh or csh, use this activation command instead:
 
 ```tcsh
 source .reproera/activate.tcsh
 ```
 
-`--project` treats the Reproera checkout's parent as the project root. It copies
-the CLI into `.reproera`, creates `.reproera/activate` for Bash and Zsh, and
-creates `.reproera/activate.tcsh` for tcsh and csh. The source checkout can then
-be removed after installation succeeds, but the installer never removes it
-automatically. Activation binds `REPROERA_PREFIX` and `REPROERA_STATE_DIR` to
-that project, so commands cannot fall back to `~/.local` before
-`reproera.toml` exists. Re-enter the project later by sourcing the appropriate
-activation file again.
+The installer copies the CLI into `.reproera`, so the cloned `Reproera/`
+directory may be removed afterward. Reproera never removes it automatically.
+Source the activation file again when opening a new shell.
 
-For backward compatibility, `./install.sh` still installs the CLI into
-`~/.local`; `./install.sh --prefix PATH` selects another explicit user-owned
-prefix. Project mode does not modify `~/.local` or shell startup files. Source
-archives remain shared in `~/.cache/reproera` unless `REPROERA_CACHE_DIR` is
-overridden.
+## What it installs
 
-## Project environments
+| Tool | Default version |
+| --- | ---: |
+| Python | 3.11.16 |
+| tmux | 3.6b |
 
-`reproera init` creates a pinned `reproera.toml` and a private `.reproera/`
-runtime directory. With no package arguments it selects the default Python;
-packages can instead be specified explicitly:
+Their pinned native dependencies are built into the same project prefix,
+including zlib, bzip2, xz, libffi, SQLite, Perl, OpenSSL, ncurses, readline,
+and libevent. Python 3.11.9 and tmux 3.3a are also available when explicitly
+requested.
 
-```bash
-reproera init python@3.11.9 tmux@3.3a
-```
-
-From the project root or any child directory, `doctor`, `plan`, `install`, and
-`env` automatically use `.reproera/prefix` and `.reproera/state`. Source
-archives remain in the shared `~/.cache/reproera` cache. This keeps compiled
-environments isolated without downloading the same archives for every project.
-
-For a project-local tcsh environment:
-
-```tcsh
-source .reproera/activate.tcsh
-reproera doctor
-```
-
-For an explicitly global installation, `reproera shell-init tcsh --apply`
-remains available and creates `~/.cshrc.reproera.bak` before changing an
-existing file. Without `--apply`, it only prints the lines it would add.
+GCC installation is not implemented. Reproera detects and validates the host
+compiler, including GCC 4.8.5, but uses it to build the selected environment.
 
 ## Commands
 
-```text
-reproera doctor [--json]
-reproera list
-reproera init [PACKAGE[@VERSION] ...]
-reproera plan [PACKAGE[@VERSION]]
-reproera install [PACKAGE[@VERSION]] [--prefix PATH] [--jobs N] [--dry-run]
-reproera verify [PACKAGE[@VERSION]]
-reproera env [bash|zsh|tcsh]
-reproera shell-init [bash|zsh|tcsh] [--apply]
-```
+| Command | Purpose |
+| --- | --- |
+| `reproera doctor` | Check the host and project prefix |
+| `reproera init ...` | Create a pinned `reproera.toml` |
+| `reproera plan` | Show the dependency build order |
+| `reproera install` | Download, verify, build, and install |
+| `reproera verify` | Verify packages and the active shell environment |
+| `reproera list` | Show supported recipes and defaults |
+| `reproera env SHELL` | Print shell environment code |
+| `reproera shell-init SHELL [--apply]` | Generate or apply persistent setup |
 
-`reproera install` ends with a verification summary that distinguishes a
-healthy installation from an inactive shell. Run `reproera verify` at any time
-to recheck every configured package, its installation marker, and whether the
-current shell resolves programs from the project prefix. `reproera env` prints
-shell code; it cannot modify its parent shell by itself. Project users should
-source `.reproera/activate` or `.reproera/activate.tcsh` instead.
+`reproera env` only prints shell code; it cannot modify its parent shell.
+Project users should normally source `.reproera/activate` or
+`.reproera/activate.tcsh`.
 
-## Supported recipes
+## Project isolation
 
-| Package | Pinned version | Notes |
-| --- | ---: | --- |
-| zlib | 1.3.1 | Python dependency |
-| bzip2 | 1.0.8 | Enables Python `bz2` |
-| xz | 5.8.3 | Enables Python `lzma` |
-| libffi | 3.8.0 | Enables Python `ctypes` |
-| SQLite | 3.53.4 | Enables Python `sqlite3` |
-| Perl | 5.40.2 | Rootless OpenSSL build dependency |
-| OpenSSL | 3.5.8 LTS | Python dependency |
-| ncurses | 6.5 | Enables Python `curses`; tmux dependency |
-| readline | 8.3 | Enables Python `readline` |
-| libevent | 2.1.13-stable | Built without OpenSSL |
-| Python | 3.11.16 | Uses `altinstall`; 3.11.9 also available explicitly |
-| tmux | 3.6b | Links to the user prefix; 3.3a also available explicitly |
-| GCC | 11.5.0 target | Diagnostics only |
+- `reproera.toml` records the versions requested by the project.
+- `.reproera/prefix` contains that project's compiled tools and libraries.
+- `.reproera/state` contains project-scoped build state and install markers.
+- `~/.cache/reproera` shares downloaded source archives across projects.
 
-## Testing
+The original global modes remain available through `./install.sh` and
+`./install.sh --prefix PATH`, but `--project` is recommended.
 
-The local test suite performs no network access and does not install packages:
+## Verification and support
 
-```bash
-bash tests/test.sh
-```
+The complete Python and tmux stack is source-built as an unprivileged user in
+a CentOS 7 / GCC 4.8.5 end-to-end workflow. Fast CI also covers Rocky Linux 8,
+Ubuntu 24.04, compiler detection, shell behavior, and archive safety.
 
-GitHub Actions adds CentOS 7, Rocky Linux 8, Ubuntu 24.04, and ShellCheck jobs.
-See [docs/design.md](docs/design.md) for the distinction between simulated GCC
-versions and real container coverage.
+Current limitations include no build resume, uninstall, binary cache, ARM64,
+proxy, or offline source-bundle support. Tkinter and UUID support may depend on
+host libraries.
 
-The networked end-to-end test initializes a temporary project and performs
-clean source builds as an unprivileged CentOS 7 user. It validates automatic
-project discovery, Python native modules and dynamic library origins, starts a
-real tmux server, and checks that repeated installations are idempotent:
-
-```bash
-bash tests/e2e.sh
-```
-
-It runs weekly, whenever installer or end-to-end test code changes, and can
-also be started manually with the **End-to-end source build** workflow. Expect
-it to take substantially longer than the offline test suite.
-
-## Known limitations
-
-- The scheduled CentOS 7 end-to-end source build is intentionally separate
-  from the fast pull-request test suite.
-- Tkinter and UUID integration remain dependent on libraries supplied by the
-  host and may be omitted from Python.
-- Build resume, uninstall, binary caches, ARM64, proxies, and offline source
-  bundles are not implemented.
-- The installation marker records recipe completion but is not yet a full
-  content manifest.
-
-Please do not report the alpha as production-ready until the real container
-build matrix is green.
-
-## Security
-
-Reproera never invokes `sudo` and does not pipe remote content into a shell.
-Source archives are checked against pinned SHA-256 digests before extraction,
-and unsafe absolute or parent-traversing archive paths are rejected.
-Review recipes before use, especially on shared systems.
-
-Please follow [SECURITY.md](SECURITY.md) when reporting a vulnerability. Never
-include credentials, private hostnames, or private filesystem paths in a public
-issue.
+See [Design](docs/design.md), [Changelog](CHANGELOG.md),
+[Contributing](CONTRIBUTING.md), and [Security](SECURITY.md) for details.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+[MIT](LICENSE)
